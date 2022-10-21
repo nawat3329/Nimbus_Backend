@@ -6,7 +6,10 @@ const User = mongoose.model(
     username: String,
     email: String,
     password: String,
+    follower: [String],
+    following: [String],
   })
 );
+
 
 module.exports = User;
