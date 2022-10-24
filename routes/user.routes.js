@@ -18,4 +18,10 @@ module.exports = function (app) {
 
     app.post("/api/content/home", controller.home);
 
+    app.get("/api/content/profile", [authJwt.verifyToken], controller.profile);
+
+    app.post("/api/content/setting", [authJwt.verifyToken], controller.setting);
+
+    app.post("/api/content/editpost", [authJwt.verifyToken], controller.editpost);
+
 };
