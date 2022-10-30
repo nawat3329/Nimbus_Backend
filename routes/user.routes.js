@@ -24,4 +24,6 @@ module.exports = function (app) {
 
     app.post("/api/content/editpost", [authJwt.verifyToken], controller.editpost);
 
+    app.post("/api/content/follow", [authJwt.verifyToken], controller.follow);
+
 };
