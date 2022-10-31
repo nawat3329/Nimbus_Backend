@@ -8,6 +8,7 @@ const User = mongoose.model(
     password: String,
     follower: [String],
     following: [String],
+    images: String,
   })
 );
 
