@@ -16,7 +16,9 @@ module.exports = function (app) {
 
     app.post("/api/content/post", [authJwt.verifyToken], controller.post);
 
-    app.post("/api/content/home", controller.home);
+    app.get("/api/content/home", controller.home);
+
+    app.get("/api/content/getTotalPageHome", controller.getTotalPageHome);
 
     app.get("/api/content/profile", [authJwt.verifyToken], controller.profile);
 

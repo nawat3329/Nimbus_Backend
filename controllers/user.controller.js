@@ -101,3 +101,12 @@ exports.follow = async (req, res) => {
     return;
   }
 };
+
+exports.getTotalPageHome = async (req, res) => {
+    const count = await Post.count({visibility: "Public"});
+    console.log(count)
+    const totalPage = (Math.ceil(count/10));
+    res.send({totalPage});
+    return;
+};
+
