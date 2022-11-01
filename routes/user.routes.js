@@ -14,7 +14,7 @@ module.exports = function (app) {
 
     app.get("/api/content/user", [authJwt.verifyToken], controller.userBoard);
 
-    app.post("/api/content/post", [authJwt.verifyToken], controller.post);
+    app.post("/api/content/insertpost", [authJwt.verifyToken], controller.insertPost);
 
     app.get("/api/content/home", controller.home);
 
@@ -27,5 +27,7 @@ module.exports = function (app) {
     app.post("/api/content/editpost", [authJwt.verifyToken], controller.editpost);
 
     app.post("/api/content/follow", [authJwt.verifyToken], controller.follow);
+
+    app.post("/api/content/unfollow", [authJwt.verifyToken], controller.unfollow);
 
 };

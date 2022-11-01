@@ -12,16 +12,16 @@ exports.userBoard = (req, res) => {
   res.status(200).send("User Content.");
 };
 
-exports.post = (req, res) => {
+exports.insertPost = (req, res) => {
   console.log(req.userId);
 
-  const post = new Post({
+  const insertpost = new Post({
     text: req.body.text,
     author: req.userId,
     post_time: moment().format(),
     visibility: req.body.visibility,
   });
-  post.save((err, post) => {
+  insertpost.save((err, insertpost) => {
     if (err) {
       res.status(500).json({ message: err });
       return;
@@ -32,12 +32,23 @@ exports.post = (req, res) => {
 };
 
 exports.home = async (req, res) => {
-  const home = await Post.find()
+  console.log("This user is " + req.userId);
+  const home = await Post.find({ visibility: req.body.visibility })
     .sort({ post_time: -1 })
     .skip((req.body.page - 1) * 10)
     .limit(10);
-  console.log(home);
-  res.json(home);
+  // console.log(home);
+  // res.json(home);
+  const postRes = [];
+  for (let i = 0; i < Post.length; i++) {
+    const finduser = await User.findOne(
+      { _id: home[i].author },
+      { username: 1, images: 1, _id: 0 }
+    );
+    postRes.push(finduser);
+    postRes.push(home[i]);
+  }
+  res.send(postRes);
 };
 
 exports.profile = async (req, res) => {
@@ -94,7 +105,9 @@ exports.follow = async (req, res) => {
       { _id: req.body.userId },
       { $push: { follower: req.userId } }
     );
-    res.status(200).send(following,follower,{ message: "Follow successfully!" });
+    res
+      .status(200)
+      .send(following, follower, { message: "Follow successfully!" });
     return;
   } else {
     res.status(400).send({ message: "You already followed this user!" });
@@ -110,3 +123,29 @@ exports.getTotalPageHome = async (req, res) => {
     return;
 };
 
+
+exports.unfollow = async (req, res) => {
+  const findfollow = await User.findOne(
+    { $and: [{ _id: req.body.userId }, { follower: req.userId }] },
+    { _id: 1, username: 1, follower: 1, following: 1 }
+  );
+  //return other user
+  console.log("This user is: " + req.userId);
+  console.log("Other user is: " + req.body.userId);
+  if (findfollow == null) {
+    res.status(400).send({ message: "You do not follow this user yet!" });
+    return;
+  } else { 
+    //A unfollow B => Delete A from B Follower, Delete B from A Following
+    const deletefollowing = await User.findOne(
+      { _id: req.userId, follower:req.body.userId }
+    );
+    const deletefollower = await User.findOne(
+      { _id: req.userId }
+    );
+    res
+      .status(200)
+      .send(deletefollowing, deletefollower, { message: "Unfollow successfully!" });
+    return;
+  }
+};
