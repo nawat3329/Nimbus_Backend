@@ -5,16 +5,15 @@ const Post = mongoose.model(
   new mongoose.Schema({
     author: String,
     text: String,
-    image: String,
+    images: String,
     post_time: Date,
     edit_time: Date,
     visibility: {
       type: String,
-      enum : ['Public', 'Follow', 'Private'],
-      default: 'Public'
+      enum: ["Public", "Follow", "Private"],
+      default: "Public",
     },
   })
 );
-
 
 module.exports = Post;
