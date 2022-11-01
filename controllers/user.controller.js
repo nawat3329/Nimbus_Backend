@@ -33,22 +33,23 @@ exports.insertPost = (req, res) => {
 
 exports.home = async (req, res) => {
   console.log("This user is " + req.userId);
-  const home = await Post.find({ visibility: req.body.visibility })
+  const home = await Post.find({ visibility: "Public" })
     .sort({ post_time: -1 })
     .skip((req.body.page - 1) * 10)
-    .limit(10);
-  // console.log(home);
-  // res.json(home);
+    .limit(10)
+    .lean();
   const postRes = [];
-  for (let i = 0; i < Post.length; i++) {
+  for (let i = 0; i < home.length; i++) {
     const finduser = await User.findOne(
       { _id: home[i].author },
       { username: 1, images: 1, _id: 0 }
-    );
-    postRes.push(finduser);
-    postRes.push(home[i]);
+    ).lean();;
+    const merged = {...home[i],...finduser}
+    postRes.push(merged);
   }
-  res.send(postRes);
+  console.log(postRes)
+  res.status(200).send(postRes);
+  return;
 };
 
 exports.profile = async (req, res) => {
