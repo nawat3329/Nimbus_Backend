@@ -33,9 +33,11 @@ exports.insertPost = (req, res) => {
 
 exports.home = async (req, res) => {
   console.log("This user is " + req.userId);
+  console.log(req.query.page)
+  // console.log(req)
   const home = await Post.find({ visibility: "Public" })
     .sort({ post_time: -1 })
-    .skip((req.body.page - 1) * 10)
+    .skip((req.query.page - 1) * 10)
     .limit(10)
     .lean();
   const postRes = [];
@@ -43,12 +45,15 @@ exports.home = async (req, res) => {
     const finduser = await User.findOne(
       { _id: home[i].author },
       { username: 1, images: 1, _id: 0 }
-    ).lean();
-    const merged = { ...home[i], ...finduser };
+    ).lean();;
+    const merged = { ...home[i], ...finduser }
     postRes.push(merged);
   }
-  // console.log(postRes);
-  res.status(200).send(postRes);
+  console.log(postRes)
+  const count = await Post.count({ visibility: "Public" });
+  console.log(count)
+  const totalPage = (Math.ceil(count / 10));
+  res.status(200).send({totalPage,postRes});
   return;
 };
 
@@ -90,20 +95,21 @@ exports.editpost = async (req, res) => {
 };
 
 exports.follow = async (req, res) => {
+  console.log(req.body);
   const findfollow = await User.findOne(
-    { $and: [{ _id: req.body.userId }, { follower: req.userId }] },
+    { $and: [{ _id: req.body.profile_userID }, { follower: req.userId }] },
     { _id: 1, username: 1, follower: 1, following: 1 }
   );
   //return followed user
   console.log("This user is: " + req.userId);
-  console.log("Trying to follow: " + req.body.userId);
+  console.log("Trying to follow: " + req.body.profile_userID);
   if (findfollow == null) {
     const following = await User.findOneAndUpdate(
       { _id: req.userId },
-      { $push: { following: req.body.userId } }
+      { $push: { following: req.body.profile_userID } }
     );
     const follower = await User.findOneAndUpdate(
-      { _id: req.body.userId },
+      { _id: req.body.profile_userID },
       { $push: { follower: req.userId } }
     );
     res
@@ -116,30 +122,24 @@ exports.follow = async (req, res) => {
   }
 };
 
-exports.getTotalPageHome = async (req, res) => {
-  const count = await Post.count({ visibility: "Public" });
-  console.log(count);
-  const totalPage = Math.ceil(count / 10);
-  res.send({ totalPage });
-  return;
-};
-
 exports.unfollow = async (req, res) => {
+  console.log(req.body);
   const findfollow = await User.findOne(
-    { $and: [{ _id: req.body.userId }, { follower: req.userId }] },
+    { $and: [{ _id: req.body.profile_userID }, { follower: req.userId }] },
     { _id: 1, username: 1, follower: 1, following: 1 }
   );
   //return other user
   console.log("This user is: " + req.userId);
-  console.log("Other user is: " + req.body.userId);
+  console.log("Other user is: " + req.body.profile_userID);
   if (findfollow == null) {
     res.status(400).send({ message: "You do not follow this user yet!" });
     return;
   } else {
     //A unfollow B => Delete A from B Follower, Delete B from A Following
     const deletefollowing = await User.updateOne(
-      { _id: req.userId, following: req.body.userId },
-      {$pull: {following: req.body.userId} }
+      { _id: req.userId, following: req.body.profile_userID },
+      {$pull: {following: req.body.profile_userID} }
+
     );
     const deletefollower = await User.updateOne(
       { _id: req.body.userId, follower: req.userId },
@@ -153,3 +153,34 @@ exports.unfollow = async (req, res) => {
     return;
   }
 };
+exports.getProfileContent = async (req, res) => {
+  console.log(req.query.profile_userID)
+  const TargetUser = await User.findById(req.query.profile_userID)
+  console.log(TargetUser)
+  if (!TargetUser) {
+    res.status(404).send("User Not Found");
+    return
+  }
+  const visibility = TargetUser.follower.includes(req.userId) ? { visibility: "Public", visibility: "Follow" } : { visibility: "Public" }
+  const userPost = await Post.find(visibility)
+    .sort({ post_time: -1 })
+    .skip((req.query.page - 1) * 10)
+    .limit(10)
+    .lean();
+  const count = await Post.count(visibility);
+  const totalPage = (Math.ceil(count / 10));
+  const postRes = userPost.map(v => ({ ...v, username: TargetUser.username, images: TargetUser.images }))
+  console.log(postRes)
+  res.status(200).send({ totalPage, postRes });
+  return;
+}
+
+exports.getProfileDetail = async (req, res) => {
+  console.log(req.query.profile_userID);
+  let TargetUser = await User.findById(req.query.profile_userID).select({ _id: 1, username: 1, follower: 1, following: 1, images: 1 }).lean();
+  console.log(TargetUser);
+  const follow = TargetUser.following.includes(req.userId )
+  TargetUser = {...TargetUser, follow: follow}
+  res.status(200).send(TargetUser);
+  return;
+}

@@ -18,8 +18,6 @@ module.exports = function (app) {
 
     app.get("/api/content/home", controller.home);
 
-    app.get("/api/content/getTotalPageHome", controller.getTotalPageHome);
-
     app.get("/api/content/profile", [authJwt.verifyToken], controller.profile);
 
     app.post("/api/content/setting", [authJwt.verifyToken], controller.setting);
@@ -29,5 +27,9 @@ module.exports = function (app) {
     app.post("/api/content/follow", [authJwt.verifyToken], controller.follow);
 
     app.post("/api/content/unfollow", [authJwt.verifyToken], controller.unfollow);
+
+    app.get("/api/content/getProfileContent", [authJwt.verifyToken], controller.getProfileContent);
+
+    app.get("/api/content/getProfileDetail", [authJwt.verifyToken], controller.getProfileDetail);
 
 };
