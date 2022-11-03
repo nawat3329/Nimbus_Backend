@@ -122,9 +122,6 @@ exports.follow = async (req, res) => {
   }
 };
 
-
-
-
 exports.unfollow = async (req, res) => {
   console.log(req.body);
   const findfollow = await User.findOne(
@@ -139,15 +136,20 @@ exports.unfollow = async (req, res) => {
     return;
   } else {
     //A unfollow B => Delete A from B Follower, Delete B from A Following
-    const deletefollowing = await User.findOne(
-      { _id: req.userId, follower: req.body.profile_userID }
+    const deletefollowing = await User.updateOne(
+      { _id: req.userId, following: req.body.profile_userID },
+      {$pull: {following: req.body.profile_userID} }
+
     );
-    const deletefollower = await User.findOne(
-      { _id: req.userId }
+    const deletefollower = await User.updateOne(
+      { _id: req.body.userId, follower: req.userId },
+      {$pull: {follower: req.userId} }
     );
-    res
-      .status(200)
-      .send(deletefollowing, deletefollower, { message: "Unfollow successfully!" });
+
+    // console.log("deletefollower: " + deletefollower);
+    // console.log("deletefollowing: " + deletefollowing);
+    res.status(200)
+    .send(deletefollowing, deletefollower, { message: "Unfollow successfully!" });
     return;
   }
 };
