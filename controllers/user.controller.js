@@ -33,9 +33,11 @@ exports.insertPost = (req, res) => {
 
 exports.home = async (req, res) => {
   console.log("This user is " + req.userId);
+  console.log(req.query.page)
+  // console.log(req)
   const home = await Post.find({ visibility: "Public" })
     .sort({ post_time: -1 })
-    .skip((req.body.page - 1) * 10)
+    .skip((req.query.page - 1) * 10)
     .limit(10)
     .lean();
   const postRes = [];
@@ -44,11 +46,14 @@ exports.home = async (req, res) => {
       { _id: home[i].author },
       { username: 1, images: 1, _id: 0 }
     ).lean();;
-    const merged = {...home[i],...finduser}
+    const merged = { ...home[i], ...finduser }
     postRes.push(merged);
   }
   console.log(postRes)
-  res.status(200).send(postRes);
+  const count = await Post.count({ visibility: "Public" });
+  console.log(count)
+  const totalPage = (Math.ceil(count / 10));
+  res.status(200).send({totalPage,postRes});
   return;
 };
 
@@ -116,13 +121,7 @@ exports.follow = async (req, res) => {
   }
 };
 
-exports.getTotalPageHome = async (req, res) => {
-    const count = await Post.count({visibility: "Public"});
-    console.log(count)
-    const totalPage = (Math.ceil(count/10));
-    res.send({totalPage});
-    return;
-};
+
 
 
 exports.unfollow = async (req, res) => {
@@ -136,10 +135,10 @@ exports.unfollow = async (req, res) => {
   if (findfollow == null) {
     res.status(400).send({ message: "You do not follow this user yet!" });
     return;
-  } else { 
+  } else {
     //A unfollow B => Delete A from B Follower, Delete B from A Following
     const deletefollowing = await User.findOne(
-      { _id: req.userId, follower:req.body.userId }
+      { _id: req.userId, follower: req.body.userId }
     );
     const deletefollower = await User.findOne(
       { _id: req.userId }
@@ -150,3 +149,25 @@ exports.unfollow = async (req, res) => {
     return;
   }
 };
+exports.getProfileContent = async (req, res) => {
+  console.log(req.query.profile_userID)
+  const TargetUser = await User.findById(req.query.profile_userID)
+  console.log(TargetUser)
+  if (!TargetUser) {
+    res.status(404).send("User Not Found");
+    return
+  }
+  const visibility = TargetUser.follower.includes(req.userId) ? { visibility: "Public", visibility: "Follow" } : { visibility: "Public" }
+  const userPost = await Post.find(visibility)
+    .sort({ post_time: -1 })
+    .skip((req.query.page - 1) * 10)
+    .limit(10)
+    .lean();
+  const count = await Post.count(visibility);
+  const totalPage = (Math.ceil(count / 10));
+  const postRes = userPost.map(v => ({ ...v, username: TargetUser.username, images: TargetUser.images }))
+  console.log(postRes)
+  res.status(200).send({ totalPage, postRes });
+  return;
+}
+
