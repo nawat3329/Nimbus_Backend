@@ -114,7 +114,7 @@ exports.follow = async (req, res) => {
     );
     res
       .status(200)
-      .send(following, follower, { message: "Follow successfully!" });
+      .send({ message: "Follow successfully!" });
     return;
   } else {
     res.status(400).send({ message: "You already followed this user!" });
@@ -142,14 +142,14 @@ exports.unfollow = async (req, res) => {
 
     );
     const deletefollower = await User.updateOne(
-      { _id: req.body.userId, follower: req.userId },
+      { _id: req.body.profile_userID, follower: req.userId },
       {$pull: {follower: req.userId} }
     );
 
     // console.log("deletefollower: " + deletefollower);
     // console.log("deletefollowing: " + deletefollowing);
     res.status(200)
-    .send(deletefollowing, deletefollower, { message: "Unfollow successfully!" });
+    .send({ message: "Unfollow successfully!" });
     return;
   }
 };
@@ -179,7 +179,7 @@ exports.getProfileDetail = async (req, res) => {
   console.log(req.query.profile_userID);
   let TargetUser = await User.findById(req.query.profile_userID).select({ _id: 1, username: 1, follower: 1, following: 1, images: 1 }).lean();
   console.log(TargetUser);
-  const follow = TargetUser.following.includes(req.userId )
+  const follow = TargetUser.follower.includes(req.userId )
   TargetUser = {...TargetUser, follow: follow}
   res.status(200).send(TargetUser);
   return;
