@@ -43,11 +43,11 @@ exports.home = async (req, res) => {
     const finduser = await User.findOne(
       { _id: home[i].author },
       { username: 1, images: 1, _id: 0 }
-    ).lean();;
-    const merged = {...home[i],...finduser}
+    ).lean();
+    const merged = { ...home[i], ...finduser };
     postRes.push(merged);
   }
-  console.log(postRes)
+  // console.log(postRes);
   res.status(200).send(postRes);
   return;
 };
@@ -117,13 +117,12 @@ exports.follow = async (req, res) => {
 };
 
 exports.getTotalPageHome = async (req, res) => {
-    const count = await Post.count({visibility: "Public"});
-    console.log(count)
-    const totalPage = (Math.ceil(count/10));
-    res.send({totalPage});
-    return;
+  const count = await Post.count({ visibility: "Public" });
+  console.log(count);
+  const totalPage = Math.ceil(count / 10);
+  res.send({ totalPage });
+  return;
 };
-
 
 exports.unfollow = async (req, res) => {
   const findfollow = await User.findOne(
@@ -136,17 +135,21 @@ exports.unfollow = async (req, res) => {
   if (findfollow == null) {
     res.status(400).send({ message: "You do not follow this user yet!" });
     return;
-  } else { 
+  } else {
     //A unfollow B => Delete A from B Follower, Delete B from A Following
-    const deletefollowing = await User.findOne(
-      { _id: req.userId, follower:req.body.userId }
+    const deletefollowing = await User.updateOne(
+      { _id: req.userId, following: req.body.userId },
+      {$pull: {following: req.body.userId} }
     );
-    const deletefollower = await User.findOne(
-      { _id: req.userId }
+    const deletefollower = await User.updateOne(
+      { _id: req.body.userId, follower: req.userId },
+      {$pull: {follower: req.userId} }
     );
-    res
-      .status(200)
-      .send(deletefollowing, deletefollower, { message: "Unfollow successfully!" });
+
+    // console.log("deletefollower: " + deletefollower);
+    // console.log("deletefollowing: " + deletefollowing);
+    res.status(200)
+    .send(deletefollowing, deletefollower, { message: "Unfollow successfully!" });
     return;
   }
 };
