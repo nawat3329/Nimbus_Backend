@@ -95,20 +95,21 @@ exports.editpost = async (req, res) => {
 };
 
 exports.follow = async (req, res) => {
+  console.log(req.body);
   const findfollow = await User.findOne(
-    { $and: [{ _id: req.body.userId }, { follower: req.userId }] },
+    { $and: [{ _id: req.body.profile_userID }, { follower: req.userId }] },
     { _id: 1, username: 1, follower: 1, following: 1 }
   );
   //return followed user
   console.log("This user is: " + req.userId);
-  console.log("Trying to follow: " + req.body.userId);
+  console.log("Trying to follow: " + req.body.profile_userID);
   if (findfollow == null) {
     const following = await User.findOneAndUpdate(
       { _id: req.userId },
-      { $push: { following: req.body.userId } }
+      { $push: { following: req.body.profile_userID } }
     );
     const follower = await User.findOneAndUpdate(
-      { _id: req.body.userId },
+      { _id: req.body.profile_userID },
       { $push: { follower: req.userId } }
     );
     res
@@ -125,20 +126,21 @@ exports.follow = async (req, res) => {
 
 
 exports.unfollow = async (req, res) => {
+  console.log(req.body);
   const findfollow = await User.findOne(
-    { $and: [{ _id: req.body.userId }, { follower: req.userId }] },
+    { $and: [{ _id: req.body.profile_userID }, { follower: req.userId }] },
     { _id: 1, username: 1, follower: 1, following: 1 }
   );
   //return other user
   console.log("This user is: " + req.userId);
-  console.log("Other user is: " + req.body.userId);
+  console.log("Other user is: " + req.body.profile_userID);
   if (findfollow == null) {
     res.status(400).send({ message: "You do not follow this user yet!" });
     return;
   } else {
     //A unfollow B => Delete A from B Follower, Delete B from A Following
     const deletefollowing = await User.findOne(
-      { _id: req.userId, follower: req.body.userId }
+      { _id: req.userId, follower: req.body.profile_userID }
     );
     const deletefollower = await User.findOne(
       { _id: req.userId }
@@ -171,3 +173,12 @@ exports.getProfileContent = async (req, res) => {
   return;
 }
 
+exports.getProfileDetail = async (req, res) => {
+  console.log(req.query.profile_userID);
+  let TargetUser = await User.findById(req.query.profile_userID).select({ _id: 1, username: 1, follower: 1, following: 1, images: 1 }).lean();
+  console.log(TargetUser);
+  const follow = TargetUser.following.includes(req.userId )
+  TargetUser = {...TargetUser, follow: follow}
+  res.status(200).send(TargetUser);
+  return;
+}

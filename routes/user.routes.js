@@ -30,4 +30,6 @@ module.exports = function (app) {
 
     app.get("/api/content/getProfileContent", [authJwt.verifyToken], controller.getProfileContent);
 
+    app.get("/api/content/getProfileDetail", [authJwt.verifyToken], controller.getProfileDetail);
+
 };
