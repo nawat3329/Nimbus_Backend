@@ -162,7 +162,7 @@ exports.getProfileContent = async (req, res) => {
       res.status(404).send("User Not Found");
       return
     }
-    const visibility = TargetUser.follower.includes(req.userId) ? { visibility: "Public", visibility: "Follow" } : { visibility: "Public" }
+    const visibility = TargetUser.follower.includes(req.userId) ? { $or:[{visibility: "Public"}, {visibility: "Follow"} ]} : { visibility: "Public" }
     const userPost = await Post.find({ ...visibility, author: req.query.profile_userID })
       .sort({ post_time: -1 })
       .skip((req.query.page - 1) * 10)
@@ -205,8 +205,6 @@ exports.getSelfProfileContent = async (req, res) => {
     res.status(500).send(err)
   }
 }
-
-
 
 exports.getProfileDetail = async (req, res) => {
   try {
