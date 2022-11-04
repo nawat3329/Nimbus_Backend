@@ -18,11 +18,15 @@ module.exports = function (app) {
 
     app.get("/api/content/home", controller.home);
 
+    app.get("/api/content/homefollow", controller.homefollow);
+
     app.get("/api/content/profile", [authJwt.verifyToken], controller.profile);
 
-    app.post("/api/content/setting", [authJwt.verifyToken], controller.setting);
+    app.post("/api/content/accountsetting", [authJwt.verifyToken], controller.accountsetting);
 
     app.post("/api/content/editpost", [authJwt.verifyToken], controller.editpost);
+
+    app.post("/api/content/deletepost", [authJwt.verifyToken], controller.deletepost);
 
     app.post("/api/content/follow", [authJwt.verifyToken], controller.follow);
 
