@@ -32,4 +32,8 @@ module.exports = function (app) {
 
     app.get("/api/content/getProfileDetail", [authJwt.verifyToken], controller.getProfileDetail);
 
+    app.get("/api/content/getSelfProfileContent", [authJwt.verifyToken], controller.getSelfProfileContent);
+
+    
+
 };

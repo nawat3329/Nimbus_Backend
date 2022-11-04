@@ -53,7 +53,7 @@ exports.home = async (req, res) => {
   const count = await Post.count({ visibility: "Public" });
   console.log(count)
   const totalPage = (Math.ceil(count / 10));
-  res.status(200).send({totalPage,postRes});
+  res.status(200).send({ totalPage, postRes });
   return;
 };
 
@@ -138,49 +138,87 @@ exports.unfollow = async (req, res) => {
     //A unfollow B => Delete A from B Follower, Delete B from A Following
     const deletefollowing = await User.updateOne(
       { _id: req.userId, following: req.body.profile_userID },
-      {$pull: {following: req.body.profile_userID} }
+      { $pull: { following: req.body.profile_userID } }
 
     );
     const deletefollower = await User.updateOne(
       { _id: req.body.profile_userID, follower: req.userId },
-      {$pull: {follower: req.userId} }
+      { $pull: { follower: req.userId } }
     );
 
     // console.log("deletefollower: " + deletefollower);
     // console.log("deletefollowing: " + deletefollowing);
     res.status(200)
-    .send({ message: "Unfollow successfully!" });
+      .send({ message: "Unfollow successfully!" });
     return;
   }
 };
 exports.getProfileContent = async (req, res) => {
-  console.log(req.query.profile_userID)
-  const TargetUser = await User.findById(req.query.profile_userID)
-  console.log(TargetUser)
-  if (!TargetUser) {
-    res.status(404).send("User Not Found");
-    return
+  try {
+    console.log(req.query.profile_userID)
+    const TargetUser = await User.findById(req.query.profile_userID)
+    console.log(TargetUser)
+    if (!TargetUser) {
+      res.status(404).send("User Not Found");
+      return
+    }
+    const visibility = TargetUser.follower.includes(req.userId) ? { visibility: "Public", visibility: "Follow" } : { visibility: "Public" }
+    const userPost = await Post.find({ ...visibility, author: req.query.profile_userID })
+      .sort({ post_time: -1 })
+      .skip((req.query.page - 1) * 10)
+      .limit(10)
+      .lean();
+    const count = await Post.count({ ...visibility, author: req.query.profile_userID });
+    const totalPage = (Math.ceil(count / 10));
+    const postRes = userPost.map(v => ({ ...v, username: TargetUser.username, profile_images: TargetUser.images }))
+    console.log(postRes)
+    res.status(200).send({ totalPage, postRes });
+    return;
+  } catch (err) {
+    console.log(err)
+    res.status(500).send(err)
   }
-  const visibility = TargetUser.follower.includes(req.userId) ? { visibility: "Public", visibility: "Follow" } : { visibility: "Public" }
-  const userPost = await Post.find(visibility)
-    .sort({ post_time: -1 })
-    .skip((req.query.page - 1) * 10)
-    .limit(10)
-    .lean();
-  const count = await Post.count(visibility);
-  const totalPage = (Math.ceil(count / 10));
-  const postRes = userPost.map(v => ({ ...v, username: TargetUser.username, images: TargetUser.images }))
-  console.log(postRes)
-  res.status(200).send({ totalPage, postRes });
-  return;
 }
 
+exports.getSelfProfileContent = async (req, res) => {
+  try {
+    console.log(req.userId)
+    const TargetUser = await User.findById(req.userId)
+    console.log(TargetUser)
+    if (!TargetUser) {
+      res.status(404).send("User Not Found");
+      return
+    }
+    const userPost = await Post.find({ author: req.userId })
+      .sort({ post_time: -1 })
+      .skip((req.query.page - 1) * 10)
+      .limit(10)
+      .lean();
+    const count = await Post.count({ author: req.userId });
+    const totalPage = (Math.ceil(count / 10));
+    const postRes = userPost.map(v => ({ ...v, username: TargetUser.username, profile_images: TargetUser.images }))
+    console.log(postRes)
+    res.status(200).send({ totalPage, postRes });
+    return;
+  } catch (err) {
+    console.log(err)
+    res.status(500).send(err)
+  }
+}
+
+
+
 exports.getProfileDetail = async (req, res) => {
-  console.log(req.query.profile_userID);
-  let TargetUser = await User.findById(req.query.profile_userID).select({ _id: 1, username: 1, follower: 1, following: 1, images: 1 }).lean();
-  console.log(TargetUser);
-  const follow = TargetUser.follower.includes(req.userId )
-  TargetUser = {...TargetUser, follow: follow}
-  res.status(200).send(TargetUser);
-  return;
+  try {
+    console.log(req.query.profile_userID);
+    let TargetUser = await User.findById(req.query.profile_userID).select({ _id: 1, username: 1, follower: 1, following: 1, images: 1 }).lean();
+    console.log(TargetUser);
+    const follow = TargetUser?.follower.includes(req.userId)
+    TargetUser = { ...TargetUser, follow: follow }
+    res.status(200).send(TargetUser);
+    return;
+  } catch (err) {
+    console.log(err)
+    res.status(500).send(err)
+  }
 }
