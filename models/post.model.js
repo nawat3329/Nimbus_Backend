@@ -5,7 +5,7 @@ const Post = mongoose.model(
   new mongoose.Schema({
     author: String,
     text: String,
-    images: String,
+    post_images: String,
     post_time: Date,
     edit_time: Date,
     visibility: {

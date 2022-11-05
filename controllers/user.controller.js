@@ -35,7 +35,6 @@ exports.home = async (req, res) => {
   try {
     console.log("This user is " + req.userId);
     console.log(req.query.page);
-    // console.log(req)
     const home = await Post.find({ visibility: "Public" })
       .sort({ post_time: -1 })
       .skip((req.query.page - 1) * 10)
@@ -64,11 +63,34 @@ exports.home = async (req, res) => {
 
 exports.homefollow = async (req, res) => {
   try {
-    console.log("This user is " + req.userId);
-    console.log(req.query.page);
-    // console.log(req)
-    const followeruser = User.findOne({_id:req.userId},{follower:1})
-    console.log("follower: "+ followeruser);
+    console.log("This user is: " + req.userId);
+    const finduserfollow = await User.findById(req.userId, {
+      following: 1,
+    }).lean();
+    const arrayfollowing = finduserfollow.following;
+    console.log("This user followed: " + arrayfollowing);
+    console.log("This user followed : " + arrayfollowing.length + " users");
+    const postRes = [];
+    for (let i = 0; i < arrayfollowing.length; i++) {
+      const findfollowuserprofile = await User.findById(arrayfollowing[i], {
+        _id: 0,
+        username: 1,
+        images: 1,
+      }).lean();
+      const findfollowpost = await Post.find({
+        author: arrayfollowing[i],
+        $or: [{ visibility: "Public" }, { visibility: "Follow" }],
+      }).lean();
+      for (let i = 0; i < findfollowpost.length; i++) {
+        const merged = { ...findfollowuserprofile, ...findfollowpost[i] };
+        postRes.push(merged);
+      }
+    }
+    console.log("postRes: " + postRes);
+    const count = await Post.count({ visibility: "Follow" });
+    console.log("count: " + count);
+    const totalPage = Math.ceil(count / 10);
+    res.status(200).send({ totalPage, postRes });
   } catch (err) {
     console.log(err);
     res.status(500).send(err);
@@ -80,7 +102,7 @@ exports.profile = async (req, res) => {
     console.log("This user is " + req.userId);
     const profile = await User.findOne(
       { _id: req.userId },
-      { _id: 1, username: 1, images: 1}
+      { _id: 1, username: 1, images: 1 }
     );
     res.status(200).send(profile);
   } catch (err) {
@@ -130,9 +152,7 @@ exports.editpost = async (req, res) => {
 exports.deletepost = async (req, res) => {
   try {
     console.log("This postId is " + req.postId);
-    const deletepost = await Post.findOneAndDelete(
-      { _id: req.body.postId }
-    );
+    const deletepost = await Post.findOneAndDelete({ _id: req.body.postId });
     res.status(200).send("Delete post successfully");
   } catch (err) {
     console.log(err);

@@ -18,7 +18,7 @@ module.exports = function (app) {
 
     app.get("/api/content/home", controller.home);
 
-    app.get("/api/content/homefollow", controller.homefollow);
+    app.get("/api/content/homefollow",[authJwt.verifyToken], controller.homefollow);
 
     app.get("/api/content/profile", [authJwt.verifyToken], controller.profile);
 
