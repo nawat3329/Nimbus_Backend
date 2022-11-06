@@ -309,3 +309,97 @@ exports.getProfileDetail = async (req, res) => {
     res.status(500).send(err);
   }
 };
+
+exports.getpostdetail = async (req, res) => {
+  try {
+    console.log("This user is: " + req.userId);
+    const findpost = await Post.findOne(
+      { _id: req.body.postId },
+      {
+        _id: 0,
+        author: 1,
+        text: 1,
+        post_time: 1,
+        visibility: 1,
+        post_images: 1,
+      }
+    );
+    res.status(200).send(findpost);
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+};
+
+exports.seefollower = async (req, res) => {
+  try {
+    console.log("This user is " + req.userId);
+    const finduserfollower = await User.findById(req.userId, {
+      follower: 1,
+    }).lean();
+    const userfollwerprofileRes = [];
+    const userfollower = finduserfollower.follower;
+    for (let i = 0; i < userfollower.length; i++) {
+      const finduserfollowerprofile = await User.findById(userfollower[i], {
+        _id: 1,
+        username: 1,
+        images: 1,
+      }).lean();
+      userfollwerprofileRes.push(finduserfollowerprofile);
+    }
+    console.log("This user has been followed by " + userfollower);
+    res.status(200).send(userfollwerprofileRes);
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+};
+
+exports.seefollowing = async (req, res) => {
+  try {
+    console.log("This user is " + req.userId);
+    const finduserfollowing = await User.findById(req.userId, {
+      following: 1,
+    }).lean();
+    const userfollwingprofileRes = [];
+    const userfollowing = finduserfollowing.following;
+    for (let i = 0; i < userfollowing.length; i++) {
+      const finduserfollowingprofile = await User.findById(userfollowing[i], {
+        _id: 1,
+        username: 1,
+        images: 1,
+      }).lean();
+      userfollwingprofileRes.push(finduserfollowingprofile);
+    }
+    console.log("This user followed " + userfollowing);
+    res.status(200).send(userfollwingprofileRes);
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+};
+
+exports.searchuser = async (req, res) => {
+  try {
+    console.log("This user is " + req.userId);
+    console.log(
+      "Search for user: " + req.body.username + " ID: " + req.body.userId
+    );
+    const searchresult = await User.findOne(
+      { $or: [{ _id: req.body.userId }, { username: req.body.username }] },
+      { password: 0 }
+    );
+    if(!searchresult==true){
+      res.status(400).send("User not found");
+      return;
+    }
+    res.status(200).send(searchresult);
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+};
