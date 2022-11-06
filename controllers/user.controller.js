@@ -334,8 +334,8 @@ exports.getpostdetail = async (req, res) => {
 
 exports.seefollower = async (req, res) => {
   try {
-    console.log("This user is " + req.userId);
-    const finduserfollower = await User.findById(req.userId, {
+    console.log("This user is " + req.query.userId);
+    const finduserfollower = await User.findById(req.query.userId, {
       follower: 1,
     }).lean();
     const userfollwerprofileRes = [];
@@ -359,8 +359,8 @@ exports.seefollower = async (req, res) => {
 
 exports.seefollowing = async (req, res) => {
   try {
-    console.log("This user is " + req.userId);
-    const finduserfollowing = await User.findById(req.userId, {
+    console.log("This user is " + req.query.userId);
+    const finduserfollowing = await User.findById(req.query.userId, {
       following: 1,
     }).lean();
     const userfollwingprofileRes = [];
