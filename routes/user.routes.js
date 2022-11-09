@@ -38,6 +38,13 @@ module.exports = function (app) {
 
     app.get("/api/content/getSelfProfileContent", [authJwt.verifyToken], controller.getSelfProfileContent);
 
-    
+    app.post("/api/content/getpostdetail", [authJwt.verifyToken], controller.getpostdetail);
+
+    app.get("/api/content/seefollower", [authJwt.verifyToken], controller.seefollower);
+
+    app.get("/api/content/seefollowing", [authJwt.verifyToken], controller.seefollowing);
+
+    app.post("/api/content/searchuser", [authJwt.verifyToken], controller.searchuser);
+
 
 };
