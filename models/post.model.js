@@ -14,7 +14,7 @@ const Post = mongoose.model(
       default: "Public",
     },
     like: [String],
-    comment: { usercommentid: String, usercomment: String, comment_time: Date, },
+    comment: [{ usercommentid: String, usercomment: String, comment_time: Date, }],
   })
 );
 

@@ -449,10 +449,14 @@ exports.deletecomment = async (req, res) => {
       res.status(400).send("Post not found");
       return;
     } else {
-      const findcomment = await Post.findOne({
-        _id: req.body.postId,
-      });
-      console.log(findcomment);
+      const deletecomment = await Post.updateOne(
+        {
+          _id: req.body.postId,
+          commentId: req.body.commentId,
+        },
+        { $pull: { comment:{_id: req.body.commentId }} }
+      );
+      console.log(deletecomment);
       res.status(200).send("Delete comment successfully");
       return;
     }
