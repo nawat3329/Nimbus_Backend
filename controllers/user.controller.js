@@ -392,11 +392,138 @@ exports.searchuser = async (req, res) => {
       { $or: [{ _id: req.body.userId }, { username: req.body.username }] },
       { password: 0 }
     );
-    if(!searchresult==true){
+    if (!searchresult == true) {
       res.status(400).send("User not found");
       return;
     }
     res.status(200).send(searchresult);
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+};
+
+exports.addcomment = async (req, res) => {
+  try {
+    console.log("This user is " + req.userId);
+    const findpost = await Post.findOne(
+      { _id: req.body.postId },
+      { _id: 1, author: 1, text: 1, comment: 1 }
+    );
+    console.log(findpost);
+    if (!findpost == true) {
+      res.status(400).send("Post not found");
+      return;
+    } else {
+      const insertcomment = await Post.findOneAndUpdate(
+        { _id: req.body.postId },
+        {
+          $push: {
+            comment: {
+              usercommentid: req.userId,
+              usercomment: req.body.commenttext,
+              comment_time: moment().format(),
+            },
+          },
+        }
+      );
+      res.status(200).send("Comment successfully");
+      return;
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+};
+
+exports.deletecomment = async (req, res) => {
+  try {
+    console.log("This user is " + req.userId);
+    const findpost = await Post.findOne(
+      { _id: req.body.postId, usercommentid: req.userId },
+      { _id: 1, author: 1, text: 1, comment: 1 }
+    );
+    // console.log(findpost);
+    if (!findpost == true) {
+      res.status(400).send("Post not found");
+      return;
+    } else {
+      const deletecomment = await Post.updateOne(
+        {
+          _id: req.body.postId,
+          commentId: req.body.commentId,
+        },
+        { $pull: { comment:{_id: req.body.commentId }} }
+      );
+      console.log(deletecomment);
+      res.status(200).send("Delete comment successfully");
+      return;
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+};
+
+exports.like = async (req, res) => {
+  try {
+    console.log("This user is " + req.userId);
+    const findpost = await Post.findOne(
+      { _id: req.body.postId },
+      { _id: 1, author: 1, text: 1, comment: 1 }
+    );
+    console.log(findpost);
+    if (!findpost == true) {
+      res.status(400).send("Post not found");
+      return;
+    } else {
+      const findlike = await Post.findOne({
+        _id: req.body.postId,
+        like: req.userId,
+      });
+      console.log(findlike);
+      if (!findlike == true) {
+        const addlike = await Post.findOneAndUpdate(
+          { _id: req.body.postId },
+          {
+            $push: {
+              like: req.userId,
+            },
+          }
+        );
+        res.status(200).send("You like this post");
+        return;
+      }
+      res.status(400).send("You already like this post");
+      return;
+    }
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+};
+
+exports.unlike = async (req, res) => {
+  try {
+    const findlike = await Post.findOne({
+      _id: req.body.postId,
+      like: req.userId,
+    });
+    console.log(findlike);
+    if (!findlike == true) {
+      res.status(400).send("You don't like this post yet");
+      return;
+    }
+    const dislike = await Post.findOneAndUpdate(
+      { _id: req.body.postId },
+      {
+        $pull: {
+          like: req.userId,
+        },
+      }
+    );
+    res.status(200).send("Unlike successfully");
     return;
   } catch (err) {
     console.log(err);

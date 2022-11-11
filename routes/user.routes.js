@@ -46,5 +46,13 @@ module.exports = function (app) {
 
     app.post("/api/content/searchuser", [authJwt.verifyToken], controller.searchuser);
 
+    app.post("/api/content/addcomment", [authJwt.verifyToken], controller.addcomment);
+
+    app.post("/api/content/deletecomment", [authJwt.verifyToken], controller.deletecomment);
+
+    app.post("/api/content/like", [authJwt.verifyToken], controller.like);
+
+    app.post("/api/content/unlike", [authJwt.verifyToken], controller.unlike);
+
 
 };

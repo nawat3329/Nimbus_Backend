@@ -13,6 +13,8 @@ const Post = mongoose.model(
       enum: ["Public", "Follow", "Private"],
       default: "Public",
     },
+    like: [String],
+    comment: [{ usercommentid: String, usercomment: String, comment_time: Date, }],
   })
 );
 
