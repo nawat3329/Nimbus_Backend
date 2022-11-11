@@ -52,7 +52,7 @@ module.exports = function (app) {
 
     app.post("/api/content/like", [authJwt.verifyToken], controller.like);
 
-    app.post("/api/content/dislike", [authJwt.verifyToken], controller.unlike);
+    app.post("/api/content/unlike", [authJwt.verifyToken], controller.unlike);
 
 
 };
