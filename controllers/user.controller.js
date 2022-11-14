@@ -55,7 +55,13 @@ exports.home = async (req, res) => {
         { _id: home[i].author },
         { username: 1, images: 1, _id: 0 }
       ).lean();
-      const merged = { ...home[i], ...finduser };
+      const checklike = (await Post.exists({
+        _id: home[i]._id,
+        like: req.query.userId,
+      }))
+        ? true
+        : false;
+      const merged = { ...home[i], islike: checklike, ...finduser };
       postRes.push(merged);
     }
     // console.log(postRes);
@@ -268,8 +274,7 @@ exports.getProfileContent = async (req, res) => {
       author: req.query.profile_userID,
     });
     const totalPage = Math.ceil(count / 10);
-    const postRes = userPost.map((v) => (
-      {
+    const postRes = userPost.map((v) => ({
       ...v,
       islike: v?.like?.includes(req.userId) ? true : false,
       username: TargetUser.username,
