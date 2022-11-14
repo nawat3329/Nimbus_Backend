@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: nawatnimbusbackend 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nawatnimbusbackend
+  template:
+    metadata:
+      labels:
+        app: nawatnimbusbackend 
+    spec:
+      containers:
+        - name: nawatnimbusbackend 
+          image: nimbusacr.azurecr.io/nawatnimbusbackend
+          ports:
+          - containerPort: 8080
