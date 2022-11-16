@@ -3,6 +3,15 @@ const Post = db.post;
 const User = db.user;
 const moment = require("moment");
 
+async function checkLike(req) {
+  const checklike = await Post.exists({
+    _id: req.body.postId,
+    like: req.userId,
+  });
+  // console.log(checklike);
+  return checklike ? true : false;
+}
+
 exports.allAccess = (req, res) => {
   res.status(200).send("Public Content.");
 };
@@ -46,12 +55,18 @@ exports.home = async (req, res) => {
         { _id: home[i].author },
         { username: 1, images: 1, _id: 0 }
       ).lean();
-      const merged = { ...home[i], ...finduser };
+      const checklike = (await Post.exists({
+        _id: home[i]._id,
+        like: req.query.userId,
+      }))
+        ? true
+        : false;
+      const merged = { ...home[i], islike: checklike, ...finduser };
       postRes.push(merged);
     }
-    console.log(postRes);
+    // console.log(postRes);
     const count = await Post.count({ visibility: "Public" });
-    console.log(count);
+    // console.log(count);
     const totalPage = Math.ceil(count / 10);
     res.status(200).send({ totalPage, postRes });
     return;
@@ -82,11 +97,21 @@ exports.homefollow = async (req, res) => {
         $or: [{ visibility: "Public" }, { visibility: "Follow" }],
       }).lean();
       for (let i = 0; i < findfollowpost.length; i++) {
-        const merged = { ...findfollowuserprofile, ...findfollowpost[i] };
+        const checklike = await Post.exists({
+          _id: findfollowpost[i]._id,
+          like: req.userId,
+        });
+        const checklikebool = checklike ? true : false;
+
+        const merged = {
+          ...findfollowuserprofile,
+          islike: checklikebool,
+          ...findfollowpost[i],
+        };
         postRes.push(merged);
       }
     }
-    console.log("postRes: " + postRes);
+    // console.log("postRes: " + postRes);
     const count = await Post.count({ visibility: "Follow" });
     console.log("count: " + count);
     const totalPage = Math.ceil(count / 10);
@@ -226,9 +251,9 @@ exports.unfollow = async (req, res) => {
 
 exports.getProfileContent = async (req, res) => {
   try {
-    console.log(req.query.profile_userID);
+    console.log("This is " + req.query.profile_userID + " profile");
     const TargetUser = await User.findById(req.query.profile_userID);
-    console.log(TargetUser);
+    // console.log(TargetUser);
     if (!TargetUser) {
       res.status(404).send("User Not Found");
       return;
@@ -251,10 +276,11 @@ exports.getProfileContent = async (req, res) => {
     const totalPage = Math.ceil(count / 10);
     const postRes = userPost.map((v) => ({
       ...v,
+      islike: v?.like?.includes(req.userId) ? true : false,
       username: TargetUser.username,
       profile_images: TargetUser.images,
     }));
-    console.log(postRes);
+    // console.log(postRes);
     res.status(200).send({ totalPage, postRes });
     return;
   } catch (err) {
@@ -277,10 +303,12 @@ exports.getSelfProfileContent = async (req, res) => {
       .skip((req.query.page - 1) * 10)
       .limit(10)
       .lean();
+
     const count = await Post.count({ author: req.userId });
     const totalPage = Math.ceil(count / 10);
     const postRes = userPost.map((v) => ({
       ...v,
+      islike: v?.like?.includes(req.userId) ? true : false,
       username: TargetUser.username,
       profile_images: TargetUser.images,
     }));
@@ -323,8 +351,11 @@ exports.getpostdetail = async (req, res) => {
         visibility: 1,
         post_images: 1,
       }
-    );
-    res.status(200).send(findpost);
+    ).lean();
+    const checklikebool = await checkLike(req);
+    const findpostlike = { ...findpost, islike: checklikebool };
+    // console.log(checklikebool);
+    res.status(200).send(findpostlike);
     return;
   } catch (err) {
     console.log(err);
@@ -454,7 +485,7 @@ exports.deletecomment = async (req, res) => {
           _id: req.body.postId,
           commentId: req.body.commentId,
         },
-        { $pull: { comment:{_id: req.body.commentId }} }
+        { $pull: { comment: { _id: req.body.commentId } } }
       );
       console.log(deletecomment);
       res.status(200).send("Delete comment successfully");
@@ -474,7 +505,7 @@ exports.like = async (req, res) => {
       { _id: 1, author: 1, text: 1, comment: 1 }
     );
     console.log(findpost);
-    if (!findpost == true) {
+    if (!findpost) {
       res.status(400).send("Post not found");
       return;
     } else {
@@ -483,7 +514,7 @@ exports.like = async (req, res) => {
         like: req.userId,
       });
       console.log(findlike);
-      if (!findlike == true) {
+      if (!findlike) {
         const addlike = await Post.findOneAndUpdate(
           { _id: req.body.postId },
           {
