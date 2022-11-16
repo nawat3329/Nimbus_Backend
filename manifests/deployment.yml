@@ -17,25 +17,25 @@ spec:
           image: nimbusacr.azurecr.io/nawatnimbusbackend
           ports:
           - containerPort: 8080
-    env:
-      - name: DB_URL
-        valueFrom:
-          secretKeyRef:
-            name: nimbus-secret
-            key: DB_URL
-      - name: secret
-        valueFrom:
-          secretKeyRef:
-            name: nimbus-secret
-            key: secret
-      - name: AZURE_STORAGE_ACCOUNT_NAME
-        valueFrom:
-          secretKeyRef:
-            name: nimbus-secret
-            key: AZURE_STORAGE_ACCOUNT_NAME
-      - name: AZURE_STORAGE_ACCOUNT_ACCESS_KEY
-        valueFrom:
-          secretKeyRef:
-            name: nimbus-secret
-            key: AZURE_STORAGE_ACCOUNT_ACCESS_KEY
+          env:
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: nimbus-secret
+                  key: DB_URL
+            - name: secret
+              valueFrom:
+                secretKeyRef:
+                  name: nimbus-secret
+                  key: secret
+            - name: AZURE_STORAGE_ACCOUNT_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: nimbus-secret
+                  key: AZURE_STORAGE_ACCOUNT_NAME
+            - name: AZURE_STORAGE_ACCOUNT_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nimbus-secret
+                  key: AZURE_STORAGE_ACCOUNT_ACCESS_KEY
       
