@@ -13,6 +13,7 @@ env:
     DEPLOYMENT_MANIFEST_PATH: |
         ./manifests/deployment.yml
         ./manifests/service.yml
+        ./manifests/secret.yml
 jobs:
     buildImage:
         permissions:
@@ -21,6 +22,15 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
+            - name: Replace tokens
+              uses: cschleiden/replace-tokens@v1.2
+              with:
+                files: '["manifests/secret.yml"]'
+              env:
+                DB_URL: ${{ secrets.DB_URL }}
+                AZURE_STORAGE_ACCOUNT_NAME: ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }}
+                AZURE_STORAGE_ACCOUNT_ACCESS_KEY: ${{ secrets.AZURE_STORAGE_ACCOUNT_ACCESS_KEY }}
+                secret: ${{ secrets.SECRET }}
             - uses: azure/login@v1.4.3
               name: Azure login
               with:
