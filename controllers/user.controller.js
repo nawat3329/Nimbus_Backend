@@ -95,7 +95,11 @@ exports.homefollow = async (req, res) => {
       const findfollowpost = await Post.find({
         author: arrayfollowing[i],
         $or: [{ visibility: "Public" }, { visibility: "Follow" }],
-      }).lean();
+      })
+        .sort({ post_time: -1 })
+        .skip((req.query.page - 1) * 10)
+        .limit(10)
+        .lean();
       for (let i = 0; i < findfollowpost.length; i++) {
         const checklike = await Post.exists({
           _id: findfollowpost[i]._id,
