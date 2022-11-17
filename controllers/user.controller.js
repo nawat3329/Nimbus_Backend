@@ -4,11 +4,12 @@ const User = db.user;
 const moment = require("moment");
 
 async function checkLike(req) {
+  console.log(req.query.postId)
   const checklike = await Post.exists({
-    _id: req.body.postId,
+    _id: req.query.postId,
     like: req.userId,
   });
-  // console.log(checklike);
+  
   return checklike ? true : false;
 }
 
@@ -342,19 +343,25 @@ exports.getpostdetail = async (req, res) => {
   try {
     console.log("This user is: " + req.userId);
     const findpost = await Post.findOne(
-      { _id: req.body.postId },
+      { _id: req.query.postId },
       {
-        _id: 0,
+        _id: 1,
         author: 1,
         text: 1,
         post_time: 1,
         visibility: 1,
         post_images: 1,
+        like: 1,
+        comment: 1
       }
     ).lean();
+    const finduser = await User.findOne(
+      { _id: findpost.author },
+      { username: 1, images: 1, _id: 0 }
+    ).lean();
     const checklikebool = await checkLike(req);
-    const findpostlike = { ...findpost, islike: checklikebool };
-    // console.log(checklikebool);
+    const findpostlike = { ...findpost, islike: checklikebool, ...finduser };
+    console.log(checklikebool);
     res.status(200).send(findpostlike);
     return;
   } catch (err) {
