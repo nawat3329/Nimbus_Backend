@@ -116,9 +116,13 @@ exports.homefollow = async (req, res) => {
       }
     }
     // console.log("postRes: " + postRes);
-    const count = await Post.count({ visibility: "Follow" });
-    console.log("count: " + count);
-    const totalPage = Math.ceil(count / 10);
+    var countfollowingpost = 0;
+    for(let j =0; j<arrayfollowing.length; j++){
+      const count = await Post.count({author:arrayfollowing[j], visibility: "Follow" });
+      countfollowingpost = countfollowingpost + count;
+    }
+    console.log("count: " + countfollowingpost);
+    const totalPage = Math.ceil(countfollowingpost / 10);
     res.status(200).send({ totalPage, postRes });
   } catch (err) {
     console.log(err);
