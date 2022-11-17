@@ -9,7 +9,7 @@ async function checkLike(req) {
     _id: req.query.postId,
     like: req.userId,
   });
-  
+
   return checklike ? true : false;
 }
 
@@ -86,34 +86,42 @@ exports.homefollow = async (req, res) => {
     const arrayfollowing = finduserfollow.following;
     console.log("This user followed: " + arrayfollowing);
     console.log("This user followed : " + arrayfollowing.length + " users");
+    console.log(arrayfollowing);
     const postRes = [];
-    for (let i = 0; i < arrayfollowing.length; i++) {
-      const findfollowuserprofile = await User.findById(arrayfollowing[i], {
+    const findfollowpost = await Post.find({
+      author: { $in: arrayfollowing },
+      $or: [{ visibility: "Public" }, { visibility: "Follow" }],
+    }).sort({ post_time: -1 })
+    .skip((req.query.page - 1) * 10)
+    .limit(10)
+    .lean();
+    console.log(findfollowpost);
+    
+    for (let i = 0; i < findfollowpost.length; i++) {
+      const findfollowuserprofile = await User.findOne({
+        _id: findfollowpost[i].author,
+      }, {
         _id: 0,
         username: 1,
         images: 1,
       }).lean();
-      const findfollowpost = await Post.find({
-        author: arrayfollowing[i],
-        $or: [{ visibility: "Public" }, { visibility: "Follow" }],
-      }).lean();
-      for (let i = 0; i < findfollowpost.length; i++) {
-        const checklike = await Post.exists({
-          _id: findfollowpost[i]._id,
-          like: req.userId,
-        });
-        const checklikebool = checklike ? true : false;
-
-        const merged = {
-          ...findfollowuserprofile,
-          islike: checklikebool,
-          ...findfollowpost[i],
-        };
-        postRes.push(merged);
-      }
+      const checklike = await Post.exists({
+        _id: findfollowpost[i]._id,
+        like: req.userId,
+      });
+      const checklikebool = checklike ? true : false;
+      const merged = {
+        ...findfollowuserprofile,
+        islike: checklikebool,
+        ...findfollowpost[i],
+      };
+      postRes.push(merged);
     }
-    // console.log("postRes: " + postRes);
-    const count = await Post.count({ visibility: "Follow" });
+    console.log(postRes);
+    const count = await Post.count({
+      author: { $in: arrayfollowing },
+      $or: [{ visibility: "Public" }, { visibility: "Follow" }],
+    })
     console.log("count: " + count);
     const totalPage = Math.ceil(count / 10);
     res.status(200).send({ totalPage, postRes });
