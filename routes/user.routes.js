@@ -1,5 +1,8 @@
 const { authJwt } = require("../middlewares");
 const controller = require("../controllers/user.controller");
+const uploadimagescontroller = require("../controllers/upload_images.controller");
+const multer = require('multer');
+const upload = multer();
 
 module.exports = function (app) {
     app.use(function (req, res, next) {
@@ -38,7 +41,7 @@ module.exports = function (app) {
 
     app.get("/api/content/getSelfProfileContent", [authJwt.verifyToken], controller.getSelfProfileContent);
 
-    app.post("/api/content/getpostdetail", [authJwt.verifyToken], controller.getpostdetail);
+    app.get("/api/content/getpostdetail", [authJwt.verifyToken], controller.getpostdetail);
 
     app.get("/api/content/seefollower", [authJwt.verifyToken], controller.seefollower);
 
@@ -54,5 +57,5 @@ module.exports = function (app) {
 
     app.post("/api/content/unlike", [authJwt.verifyToken], controller.unlike);
 
-
+    app.post("/api/content/insertpostimage", [authJwt.verifyToken, upload.any()], uploadimagescontroller.insertpostimage);
 };

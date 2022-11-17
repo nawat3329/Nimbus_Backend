@@ -4,11 +4,12 @@ const User = db.user;
 const moment = require("moment");
 
 async function checkLike(req) {
+  console.log(req.query.postId)
   const checklike = await Post.exists({
-    _id: req.body.postId,
+    _id: req.query.postId,
     like: req.userId,
   });
-  // console.log(checklike);
+
   return checklike ? true : false;
 }
 
@@ -85,44 +86,44 @@ exports.homefollow = async (req, res) => {
     const arrayfollowing = finduserfollow.following;
     console.log("This user followed: " + arrayfollowing);
     console.log("This user followed : " + arrayfollowing.length + " users");
+    console.log(arrayfollowing);
     const postRes = [];
-    for (let i = 0; i < arrayfollowing.length; i++) {
-      const findfollowuserprofile = await User.findById(arrayfollowing[i], {
+    const findfollowpost = await Post.find({
+      author: { $in: arrayfollowing },
+      $or: [{ visibility: "Public" }, { visibility: "Follow" }],
+    }).sort({ post_time: -1 })
+    .skip((req.query.page - 1) * 10)
+    .limit(10)
+    .lean();
+    console.log(findfollowpost);
+    
+    for (let i = 0; i < findfollowpost.length; i++) {
+      const findfollowuserprofile = await User.findOne({
+        _id: findfollowpost[i].author,
+      }, {
         _id: 0,
         username: 1,
         images: 1,
       }).lean();
-      const findfollowpost = await Post.find({
-        author: arrayfollowing[i],
-        $or: [{ visibility: "Public" }, { visibility: "Follow" }],
-      })
-        .sort({ post_time: -1 })
-        .skip((req.query.page - 1) * 10)
-        .limit(10)
-        .lean();
-      for (let i = 0; i < findfollowpost.length; i++) {
-        const checklike = await Post.exists({
-          _id: findfollowpost[i]._id,
-          like: req.userId,
-        });
-        const checklikebool = checklike ? true : false;
-
-        const merged = {
-          ...findfollowuserprofile,
-          islike: checklikebool,
-          ...findfollowpost[i],
-        };
-        postRes.push(merged);
-      }
+      const checklike = await Post.exists({
+        _id: findfollowpost[i]._id,
+        like: req.userId,
+      });
+      const checklikebool = checklike ? true : false;
+      const merged = {
+        ...findfollowuserprofile,
+        islike: checklikebool,
+        ...findfollowpost[i],
+      };
+      postRes.push(merged);
     }
-    // console.log("postRes: " + postRes);
-    var countfollowingpost = 0;
-    for(let j =0; j<arrayfollowing.length; j++){
-      const count = await Post.count({author:arrayfollowing[j], visibility: "Follow" });
-      countfollowingpost = countfollowingpost + count;
-    }
-    console.log("count: " + countfollowingpost);
-    const totalPage = Math.ceil(countfollowingpost / 10);
+    console.log(postRes);
+    const count = await Post.count({
+      author: { $in: arrayfollowing },
+      $or: [{ visibility: "Public" }, { visibility: "Follow" }],
+    })
+    console.log("count: " + count);
+    const totalPage = Math.ceil(count / 10);
     res.status(200).send({ totalPage, postRes });
   } catch (err) {
     console.log(err);
@@ -350,19 +351,25 @@ exports.getpostdetail = async (req, res) => {
   try {
     console.log("This user is: " + req.userId);
     const findpost = await Post.findOne(
-      { _id: req.body.postId },
+      { _id: req.query.postId },
       {
-        _id: 0,
+        _id: 1,
         author: 1,
         text: 1,
         post_time: 1,
         visibility: 1,
         post_images: 1,
+        like: 1,
+        comment: 1
       }
     ).lean();
+    const finduser = await User.findOne(
+      { _id: findpost.author },
+      { username: 1, images: 1, _id: 0 }
+    ).lean();
     const checklikebool = await checkLike(req);
-    const findpostlike = { ...findpost, islike: checklikebool };
-    // console.log(checklikebool);
+    const findpostlike = { ...findpost, islike: checklikebool, ...finduser };
+    console.log(checklikebool);
     res.status(200).send(findpostlike);
     return;
   } catch (err) {
