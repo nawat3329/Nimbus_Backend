@@ -4,7 +4,7 @@ const User = db.user;
 const moment = require("moment");
 
 async function checkLike(req) {
-  console.log(req.query.postId)
+  console.log(req.query.postId);
   const checklike = await Post.exists({
     _id: req.query.postId,
     like: req.userId,
@@ -91,20 +91,24 @@ exports.homefollow = async (req, res) => {
     const findfollowpost = await Post.find({
       author: { $in: arrayfollowing },
       $or: [{ visibility: "Public" }, { visibility: "Follow" }],
-    }).sort({ post_time: -1 })
-    .skip((req.query.page - 1) * 10)
-    .limit(10)
-    .lean();
+    })
+      .sort({ post_time: -1 })
+      .skip((req.query.page - 1) * 10)
+      .limit(10)
+      .lean();
     console.log(findfollowpost);
-    
+
     for (let i = 0; i < findfollowpost.length; i++) {
-      const findfollowuserprofile = await User.findOne({
-        _id: findfollowpost[i].author,
-      }, {
-        _id: 0,
-        username: 1,
-        images: 1,
-      }).lean();
+      const findfollowuserprofile = await User.findOne(
+        {
+          _id: findfollowpost[i].author,
+        },
+        {
+          _id: 0,
+          username: 1,
+          images: 1,
+        }
+      ).lean();
       const checklike = await Post.exists({
         _id: findfollowpost[i]._id,
         like: req.userId,
@@ -121,7 +125,7 @@ exports.homefollow = async (req, res) => {
     const count = await Post.count({
       author: { $in: arrayfollowing },
       $or: [{ visibility: "Public" }, { visibility: "Follow" }],
-    })
+    });
     console.log("count: " + count);
     const totalPage = Math.ceil(count / 10);
     res.status(200).send({ totalPage, postRes });
@@ -360,7 +364,7 @@ exports.getpostdetail = async (req, res) => {
         visibility: 1,
         post_images: 1,
         like: 1,
-        comment: 1
+        comment: 1,
       }
     ).lean();
     const finduser = await User.findOne(
@@ -570,6 +574,33 @@ exports.unlike = async (req, res) => {
       }
     );
     res.status(200).send("Unlike successfully");
+    return;
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+};
+
+exports.getPostComment = async (req, res) => {
+  try {
+    console.log("This user is: " + req.userId);
+    const findpostcomment = await Post.findOne(
+      { _id: req.query.postId },
+      { comment: 1 }
+    ).lean();
+    // console.log(findpostcomment.comment[0].usercommentid);
+    // console.log(findpostcomment.comment.length);
+    const userpostcomment = [];
+    for (let i = 0; i < findpostcomment.comment.length; i++) {
+      const finduser = await User.findOne(
+        { _id: findpostcomment.comment[i].usercommentid },
+        { _id: 0, username: 1, images: 1 }
+      ).lean();
+      console.log(finduser);
+      const merged = { ...findpostcomment.comment[i], ...finduser };
+      userpostcomment.push(merged);
+    }
+    res.status(200).send(userpostcomment);
     return;
   } catch (err) {
     console.log(err);
