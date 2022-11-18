@@ -53,6 +53,8 @@ module.exports = function (app) {
 
     app.post("/api/content/deletecomment", [authJwt.verifyToken], controller.deletecomment);
 
+    app.get("/api/content/getPostComment", [authJwt.verifyToken], controller.getPostComment);
+
     app.post("/api/content/like", [authJwt.verifyToken], controller.like);
 
     app.post("/api/content/unlike", [authJwt.verifyToken], controller.unlike);
