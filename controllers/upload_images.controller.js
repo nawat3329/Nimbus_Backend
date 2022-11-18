@@ -19,10 +19,11 @@ const blobServiceClient = new BlobServiceClient(
 );
 
 exports.insertpostimage = async (req, res) => {
+    try {
     console.log(req.body);
     console.log(req.files);
     randomName = uuidv4();
-    if (req.files[0].mimetype != "image/png" && req.files[0].mimetype != "image/jpeg") {
+    if (!req.files[0].mimetype.startsWith("image/")) {
         res.status(400).send({ message: "File is not image" });
         return;
     }
@@ -37,12 +38,12 @@ exports.insertpostimage = async (req, res) => {
 
     const transformedReadableStream = Readable.from(data);
 
-    try {
+    
         const uploadBlobResponse = await blockBlobClient.uploadStream(
             transformedReadableStream,
             uploadOptions.bufferSize,
             uploadOptions.maxBuffers,
-            { blobHTTPHeaders: { blobContentType: "image/jpeg" } }
+            { blobHTTPHeaders: { blobContentType: req.files[0].mimetype } }
         );
         const insertpost = new Post({
             text: req.body.text,
