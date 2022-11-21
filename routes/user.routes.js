@@ -25,7 +25,7 @@ module.exports = function (app) {
 
     app.get("/api/content/profile", [authJwt.verifyToken], controller.profile);
 
-    app.post("/api/content/accountsetting", [authJwt.verifyToken], controller.accountsetting);
+    // app.post("/api/content/accountsetting", [authJwt.verifyToken], controller.accountsetting);
 
     app.post("/api/content/editpost", [authJwt.verifyToken], controller.editpost);
 
@@ -60,4 +60,6 @@ module.exports = function (app) {
     app.post("/api/content/unlike", [authJwt.verifyToken], controller.unlike);
 
     app.post("/api/content/insertpostimage", [authJwt.verifyToken, upload.any()], uploadimagescontroller.insertpostimage);
+
+    app.post("/api/content/changeprofilepicture", [authJwt.verifyToken, upload.any()], uploadimagescontroller.changeprofilepicture);
 };

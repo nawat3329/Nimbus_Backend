@@ -291,7 +291,7 @@ exports.getProfileContent = async (req, res) => {
       ...v,
       islike: v?.like?.includes(req.userId) ? true : false,
       username: TargetUser.username,
-      profile_images: TargetUser.images,
+      images: TargetUser.images,
     }));
     // console.log(postRes);
     res.status(200).send({ totalPage, postRes });
@@ -323,7 +323,7 @@ exports.getSelfProfileContent = async (req, res) => {
       ...v,
       islike: v?.like?.includes(req.userId) ? true : false,
       username: TargetUser.username,
-      profile_images: TargetUser.images,
+      images: TargetUser.images,
     }));
     console.log(postRes);
     res.status(200).send({ totalPage, postRes });

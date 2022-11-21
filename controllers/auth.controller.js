@@ -55,13 +55,13 @@ exports.signin = (req, res) => {
             var token = jwt.sign({ id: user.id }, process.env.secret, {
                 expiresIn: 604800 // 7 days
             });
-
+            console.log("user images: ",user.images);
             res.status(200).send({
                 id: user._id,
                 username: user.username,
                 email: user.email,
-
-                accessToken: token
+                accessToken: token,
+                images: user.images
             });
         });
 };
