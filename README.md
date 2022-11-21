@@ -17,7 +17,7 @@ AZURE_STORAGE_ACCOUNT_ACCESS_KEY="" #azure storage access key
 to start run in terminal
 ```
 npm install
-npm ci --only=production
+node index.js
 ```
 ---
 ### Azure Kubernetes Service using Azure Pipeplines
