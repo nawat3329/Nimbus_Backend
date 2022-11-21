@@ -1,9 +1,11 @@
 # Nimbus Backend
 Backend for Nimbus social media application
 ## Installation
+
 Requirement:
 1. MongoDB Database - to store user data
 2. Azure Blob Storage - to store images
+---
 ### Locally
 add .env file
 ```
@@ -17,6 +19,7 @@ to start run in terminal
 npm install
 npm ci --only=production
 ```
+---
 ### Azure Kubernetes Service using Azure Pipeplines
 \
 Conntect to Azure Pipeplines and it will automatically put the crediental to the yml file 
@@ -25,6 +28,7 @@ Put environment variables to your Github Secret
 
 Start the build process
 
+---
 ### Docker
 use this compose file to start docker container
 
