@@ -24,7 +24,7 @@ node index.js
 \
 Conntect to Azure Pipeplines and it will automatically put the crediental to the yml file 
 
-Put environment variables to your Github Secret
+Put .env file into Azure Pipelines Libary Secure Files
 
 Start the build process
 
